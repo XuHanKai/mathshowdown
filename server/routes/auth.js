@@ -1,4 +1,4 @@
-const axios = require('axios').default;
+//const axios = require('axios').default;
 const router = require("express").Router();
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
@@ -10,14 +10,13 @@ require("dotenv").config();
 router.post("/register", RegisterValidator, async(req, res) => {
     try {
         const { username, email, password, gToken } = req.body;
-
-        const url = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.SECRET_KEY}&response=${gToken}`;
+     /*   const url = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.SECRET_KEY}&response=${gToken}`;
         const gReq = await axios.post(url);
 
         if (!gReq.data.success) {
             return res.status(403).json({ success: false, message: "Failed to pass reCaptcha" });
         }
-
+        */
         const user = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($2)", [username, email]);
         if (user.rows.length > 0) {
             if (user.rows[0].username === username) {
@@ -27,16 +26,27 @@ router.post("/register", RegisterValidator, async(req, res) => {
             }
         }
 
+
+
         const saltRound = 10;
         const salt = await bcrypt.genSalt(saltRound);
         const bcrptPassword = await bcrypt.hash(password, salt);
-
+  
         const current_time = Date.now();
+        // 在服务器端控制台输出 Userinfo
+   
+        console.log('username', username);
+        console.log('email', email);
+        console.log('gToken', gToken);
+        console.log('password', password);
+        console.log('bcrptPassword', bcrptPassword);
+
 
         const newUser = await pool.query("INSERT INTO users (username, email, password_hash, registration_date) VALUES ($1, $2, $3, $4) RETURNING *",
         [username, email, bcrptPassword, current_time]);
         
         const token = jwtGenerator(newUser.rows[0].id);
+
 
         return res.status(201).json({ success: true, token: token });
     } catch (err) {
@@ -55,12 +65,15 @@ router.post("/login", async(req, res) => {
         }
 
         const validPassword = await bcrypt.compare(password, user.rows[0].password_hash);
+  
+
+
         if (!validPassword) {
             return res.status(401).json({ success: false, message: "Username/Email or Password is incorrect" });
         }
 
         const token = jwtGenerator(user.rows[0].id);
-
+        console.log("token:", token); 
         return res.status(200).json({ success: true, token: token });
     } catch (err) {
         console.error(err.message);

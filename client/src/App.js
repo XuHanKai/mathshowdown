@@ -31,7 +31,11 @@ function App() {
     fetch("/api/auth/verify", {
       method: "POST",
       headers: { "Authorization": "Bearer " + sessionStorage.getItem("auth_token") }
+      
     }).then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       return response.json();
     }).then((res) => {
       if (res.success) {
@@ -41,7 +45,12 @@ function App() {
         setAuthenticated(false);
       }
       setLoading(false);
-    })
+    }).catch((error) => {
+      console.error("Fetch error:", error);
+      setAuthenticated(false);
+      setLoading(false);
+    });
+    
   }
 
   useEffect(() => {

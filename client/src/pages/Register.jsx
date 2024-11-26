@@ -70,6 +70,7 @@ const Register = (props) => {
 
         const data = { username: inputs.username, email: inputs.email, password: inputs.password, gToken: token };
         fetch("/api/auth/register", {
+            credentials: 'include',
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
